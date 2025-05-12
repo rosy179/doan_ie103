@@ -49,14 +49,31 @@ public class SachController {
         return ResponseEntity.ok(books);
     }
     // SachController.java
-@GetMapping("/image-proxy")
-public ResponseEntity<byte[]> proxyImage(@RequestParam String url) throws IOException {
-    HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
-    connection.setRequestMethod("GET");
-    InputStream inputStream = connection.getInputStream();
-    byte[] imageBytes = inputStream.readAllBytes();
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.IMAGE_JPEG);
-    return new ResponseEntity<>(imageBytes, headers, HttpStatus.OK);
-}
+    @GetMapping("/image-proxy")
+    public ResponseEntity<byte[]> proxyImage(@RequestParam String url) {
+        try {
+            System.out.println("Proxying image from: " + url);
+            HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("User-Agent", "Mozilla/5.0"); // Thêm User-Agent để tránh bị chặn
+            int responseCode = connection.getResponseCode();
+            System.out.println("Response code from image URL: " + responseCode);
+
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                InputStream inputStream = connection.getInputStream();
+                byte[] imageBytes = inputStream.readAllBytes();
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.IMAGE_JPEG);
+                return new ResponseEntity<>(imageBytes, headers, HttpStatus.OK);
+            } else {
+                System.err.println("Failed to fetch image, response code: " + responseCode);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(null);
+            }
+        } catch (IOException e) {
+            System.err.println("Error proxying image: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+    }
 }

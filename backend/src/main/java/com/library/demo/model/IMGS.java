@@ -24,8 +24,10 @@ public class IMGS {
     // Getters và setters
     public int getMaImg() { return maImg; }
     public void setMaImg(int maImg) { this.maImg = maImg; }
+
     public int getMaSach() { return maSach; }
     public void setMaSach(int maSach) { this.maSach = maSach; }
+
     public String getImg() { return img; }
     public void setImg(String img) { this.img = img; }
 }

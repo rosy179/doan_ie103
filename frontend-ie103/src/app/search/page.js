@@ -2,8 +2,8 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { CheckCircle, XCircle } from "lucide-react";
+import { Button } from "@/app/components/Button";
 import Image from "next/image";
-import { Button } from "@/components/ui/Button";
 
 const SearchPage = () => {
   const [keyword, setKeyword] = useState("");
@@ -31,6 +31,17 @@ const SearchPage = () => {
     },
   };
 
+  const getImageSrc = (hinhAnh) => {
+    if (hinhAnh?.length > 0 && hinhAnh[0]) {
+      const encodedGoogleUrl = encodeURIComponent(hinhAnh[0]);
+      const proxyUrl = `http://localhost:8080/api/image-proxy?url=${encodeURIComponent(
+        hinhAnh[0]
+      )}`;
+      return proxyUrl;
+    }
+    return "/download.jpg";
+  };
+
   const handleSearch = async (e, page = 0) => {
     if (e) e.preventDefault();
     setLoading(true);
@@ -43,7 +54,7 @@ const SearchPage = () => {
           params: {
             keyword,
             page,
-            size: 10,
+            size: 12,
           },
         }
       );
@@ -67,11 +78,12 @@ const SearchPage = () => {
       }
     } catch (err) {
       console.error("Error fetching books:", err);
-      setError(
-        `Không thể tải danh sách sách: ${
-          err.message || "Lỗi không xác định"
-        }. Vui lòng kiểm tra backend.`
-      );
+      const errorMessage = err.response?.data
+        ? `Lỗi từ server: ${err.response.data}`
+        : `Không thể tải danh sách sách: ${
+            err.message || "Lỗi không xác định"
+          }. Vui lòng kiểm tra backend.`;
+      setError(errorMessage);
       setBooks([]);
     } finally {
       setLoading(false);
@@ -125,79 +137,82 @@ const SearchPage = () => {
       {error && <p className="text-red-500 mt-4">{error}</p>}
 
       {books?.length > 0 ? (
-        <div className="mt-6 w-full max-w-7xl">
+        <div className="mt-6 w-full max-w-4xl">
           <h2 className="text-2xl font-semibold mb-4">
             {keyword ? "Kết quả tìm kiếm" : "Tất cả sách"}
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {books.map((book) => {
-              console.log("Book image:", book.hinhAnh);
               const { label, icon, available } = statusMap[book.tinhTrang] || {
                 label: "Không xác định",
                 icon: <XCircle className="text-gray-500" />,
                 available: false,
               };
+              console.log("Book image:", book.hinhAnh);
+              console.log(
+                "Rendering image for book",
+                book.maSach,
+                "hinhAnh:",
+                book.hinhAnh
+              );
 
               return (
                 <div
                   key={book.maSach}
-                  className="flex flex-col p-6 bg-white rounded-xl shadow-md h-[450px] gap-4"
+                  className="flex flex-col p-6 bg-white rounded-xl shadow-md gap-4"
                 >
                   <Image
-                    src={
-                      book.hinhAnh?.[0]
-                        ? `http://localhost:8080/api/image-proxy?url=${encodeURIComponent(
-                            book.hinhAnh[0]
-                          )}`
-                        : "/download.jpg"
-                    }
-                    alt={book.tenSach}
+                    src={getImageSrc(book.hinhAnh)}
+                    alt={book.tenSach || "Sách không rõ tiêu đề"}
                     width={160}
                     height={224}
                     className="mx-auto rounded-lg shadow-lg object-cover"
                     placeholder="blur"
                     blurDataURL="/download.jpg"
+                    onError={() =>
+                      console.error(
+                        "Failed to load image for book",
+                        book.maSach
+                      )
+                    }
                   />
                   <div className="flex-1">
-                    <h3 className="text-xl text-center font-semibold text-blue-900">
-                      {book.tenSach}
+                    <h3 className="text-xl font-semibold text-blue-900">
+                      {book.tenSach || "Không rõ tiêu đề"}
                     </h3>
                     <p className="text-gray-700 font-semibold">
-                      Tác giả: {book.tenTacGias.join(", ")}
+                      Tác giả: {book.tenTacGias?.join(", ") || "Không rõ"}
                     </p>
                     <p>
                       <span className="font-semibold">Thể loại:</span>{" "}
-                      {book.tenTheLoais.join(", ")}
+                      {book.tenTheLoais?.join(", ") || "Không rõ"}
                     </p>
                     <p>
-                      <span className="font-semibold">NXB:</span> {book.tenNXB}
+                      <span className="font-semibold">NXB:</span>{" "}
+                      {book.tenNXB || "Không rõ"}
                     </p>
-                    <p className="flex items-center gap-2 font-semibold text-m">
-                      {icon}
-                      {label}
+                    <p className="flex items-center gap-2 font-semibold">
+                      {icon} Trạng thái: {label}
                     </p>
                     <p>
-                      <span className="font-semibold">Giá:</span> {book.gia} đ
+                      <span className="font-semibold">Giá:</span>{" "}
+                      {book.gia || 0} đ
                     </p>
                     <p>
                       <span className="font-semibold">Số lượng:</span>{" "}
-                      {book.soLuong}
+                      {book.soLuong || 0}
                     </p>
-
-                    {/*Button muon sach*/}
-                    <div className="flex gap-2">
-                      <Button
-                        disabled={!available}
-                        variant={available ? "default" : "secondary"}
-                        className={
-                          available
-                            ? "bg-[#062D76] hover:bg-[#E6EAF1] hover:text-[#062D76] text-white justify-end"
-                            : "bg-gray-300 text-gray-600 justify-end"
-                        }
-                      >
-                        Mượn sách
-                      </Button>
-                    </div>
+                    <Button
+                      disabled={!available}
+                      variant={available ? "default" : "secondary"}
+                      className={
+                        available
+                          ? "bg-[#062D76] hover:bg-[#E6EAF1] hover:text-[#062D76] text-white"
+                          : "bg-gray-300 text-gray-600"
+                      }
+                    >
+                      Mượn sách
+                    </Button>
                   </div>
                 </div>
               );

@@ -1,6 +1,6 @@
 package com.library.demo.service;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -9,18 +9,20 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import com.ibm.icu.text.Transliterator;
-import com.library.demo.DTO.SachDTO;
+import com.library.demo.DTO.SachDTO; // Import class VietnameseNormalizer
 import com.library.demo.model.IMGS;
 import com.library.demo.model.Sach;
 import com.library.demo.model.TacGia;
 import com.library.demo.model.TheLoai;
 import com.library.demo.repository.ImgRepository;
 import com.library.demo.repository.SachRepository;
-
+import com.library.demo.utils.VietnameseNormalizer;
 
 @Service
 public class SachService {
+
+    
+
     @Autowired
     private GoogleBooksService googleBooksService;
 
@@ -31,31 +33,12 @@ public class SachService {
     private ImgRepository imgRepository;
 
     public Page<SachDTO> searchBooks(String keyword, Pageable pageable) {
-        // Chuẩn hóa từ khóa (bỏ dấu)
-        String normalizedKeyword = normalizeKeyword(keyword);
+        String normalizedKeyword = VietnameseNormalizer.removeVietnameseAccents(keyword);
         Page<Sach> sachPage = sachRepository.searchBooks(normalizedKeyword, pageable);
         return sachPage.map(this::convertToDTO);
     }
 
-    private String normalizeKeyword(String keyword) {
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return null;
-        }
-        // Bỏ dấu tiếng Việt
-        Transliterator transliterator = Transliterator.getInstance("NFD; [:Nonspacing Mark:] Remove; NFC");
-        String normalized = transliterator.transliterate(keyword);
-        return normalized.trim();
-    }
-
-    // public Page<SachDTO> searchBooks(String keyword, Pageable pageable) {
-    //     if (keyword == null || keyword.trim().isEmpty()) {
-    //         return sachRepository.findAll(pageable).map(this::convertToDTO);
-    //     }
-    //     return sachRepository
-    //             .findByTenSachContainingIgnoreCaseOrTacGias_TenTacGiaContainingIgnoreCase(
-    //                     keyword, keyword, pageable)
-    //             .map(this::convertToDTO);
-    // }
+    
 
     public Page<SachDTO> getAllBooks(Pageable pageable) {
         return sachRepository.findAll(pageable).map(this::convertToDTO);
@@ -76,32 +59,26 @@ public class SachService {
         dto.setGia(sach.getGia());
         dto.setSoLuong(sach.getSoLuong());
 
-        // // Lấy hình ảnh từ Google Books API
-        // String author = sach.getTacGias().isEmpty() ? "" : sach.getTacGias().get(0).getTenTG();
-        // String imageUrl = googleBooksService.getBookCoverUrl(sach.getTenSach(), author);
-        // dto.setHinhAnh(imageUrl != null ? Collections.singletonList(imageUrl) : Collections.emptyList());
-        // Kiểm tra bảng IMGS
-    List<String> hinhAnh = imgRepository.findByMaSach(sach.getMaSach())
-            .stream()
-            .map(IMGS::getImg)
-            .collect(Collectors.toList());
+        List<String> hinhAnh = imgRepository.findByMaSach(sach.getMaSach())
+                .stream()
+                .map(IMGS::getImg)
+                .collect(Collectors.toList());
 
-    // Nếu không có hình ảnh trong IMGS, gọi Google Books API
-    if (hinhAnh.isEmpty()) {
-        String author = sach.getTacGias().isEmpty() ? "" : sach.getTacGias().get(0).getTenTG();
-        String imageUrl = googleBooksService.getBookCoverUrl(sach.getTenSach(), author);
-        if (imageUrl != null) {
-            hinhAnh = Collections.singletonList(imageUrl);
-            // Lưu vào bảng IMGS
-            IMGS img = new IMGS();
-            img.setMaSach(sach.getMaSach());
-            img.setImg(imageUrl);
-            imgRepository.save(img);
+        if (hinhAnh.isEmpty()) {
+            String author = sach.getTacGias().isEmpty() ? "" : sach.getTacGias().get(0).getTenTG();
+    String imageUrl = googleBooksService.getBookCoverUrl(sach.getTenSach(), author);
+    if (imageUrl != null) {
+        hinhAnh = new ArrayList<>(); // Đảm bảo có thể ghi thêm
+        hinhAnh.add(imageUrl);
+
+        IMGS img = new IMGS();
+        img.setMaSach(sach.getMaSach());
+        img.setImg(imageUrl);
+        imgRepository.save(img);
+            }
         }
-    }
 
-    dto.setHinhAnh(hinhAnh);
-    return dto;
-
+        dto.setHinhAnh(hinhAnh);
+        return dto;
     }
 }

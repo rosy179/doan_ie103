@@ -25,4 +25,33 @@ public class TheLoai {
 
     @ManyToMany(mappedBy = "theLoais")
     private List<Sach> sachs;
+
+    public TheLoai() {
+    }
+    public TheLoai(String tenTheLoai) {
+        this.tenTheLoai = tenTheLoai;
+    }
+    public TheLoai(Integer maTL, String tenTheLoai) {
+        this.maTL = maTL;
+        this.tenTheLoai = tenTheLoai;
+    }
+    public Integer getMaTL() {
+        return maTL;
+    }
+    public void setMaTL(Integer maTL) {
+        this.maTL = maTL;
+    }
+    public String getTenTheLoai() {
+        return tenTheLoai;
+    }
+    public void setTenTheLoai(String tenTheLoai) {
+        this.tenTheLoai = tenTheLoai;
+    }
+    public List<Sach> getSachs() {
+        return sachs;
+    }
+    public void setSachs(List<Sach> sachs) {
+        this.sachs = sachs;
+    }
+
 }
