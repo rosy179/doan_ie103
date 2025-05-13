@@ -32,13 +32,17 @@ const SearchPage = () => {
   };
 
   const getImageSrc = (hinhAnh) => {
-    if (hinhAnh?.length > 0 && hinhAnh[0]) {
-      const encodedGoogleUrl = encodeURIComponent(hinhAnh[0]);
-      const proxyUrl = `http://localhost:8080/api/image-proxy?url=${encodeURIComponent(
-        hinhAnh[0]
-      )}`;
+    {
+      /*if (hinhAnh?.length > 0 && hinhAnh[0]) {*/
+    }
+    console.log("hinhAnh raw data:", hinhAnh); // Log dữ liệu thô
+    if (Array.isArray(hinhAnh) && hinhAnh.length > 0 && hinhAnh[0]) {
+      const encodedUrl = encodeURIComponent(hinhAnh[0]);
+      const proxyUrl = `http://localhost:8080/api/books/image-proxy?url=${encodedUrl}`;
+      console.log("Generated proxy URL:", proxyUrl); // Log URL proxy
       return proxyUrl;
     }
+    console.log("Falling back to default image");
     return "/download.jpg";
   };
 
@@ -99,7 +103,7 @@ const SearchPage = () => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-gray-100 p-4">
+    <div className="flex flex-col items-center min-h-screen bg-amber-50 p-4">
       <form
         onSubmit={handleSearch}
         className="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-md backdrop-blur-sm mt-5 w-full max-w-lg"
@@ -127,7 +131,7 @@ const SearchPage = () => {
         />
         <Button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-1 rounded-full"
+          className="bg-pink-300 hover:bg-pink-500 text-white px-4 py-1 rounded-full"
           disabled={loading}
         >
           {loading ? "Đang tìm..." : "Tìm"}
@@ -137,16 +141,16 @@ const SearchPage = () => {
       {error && <p className="text-red-500 mt-4">{error}</p>}
 
       {books?.length > 0 ? (
-        <div className="mt-6 w-full max-w-4xl">
-          <h2 className="text-2xl font-semibold mb-4">
+        <div className="mt-4 w-full max-w-6xl mb-4">
+          <h2 className="text-2xl font-semibold mb-4 bg-pink-300 text-white w-fit border-2 border-pink-300 rounded-full px-4 py-2 shadow-md">
             {keyword ? "Kết quả tìm kiếm" : "Tất cả sách"}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {books.map((book) => {
               const { label, icon, available } = statusMap[book.tinhTrang] || {
-                label: "Không xác định",
-                icon: <XCircle className="text-gray-500" />,
-                available: false,
+                label: "Còn sẵn",
+                icon: <CheckCircle className="text-green-500" />,
+                available: true,
               };
               console.log("Book image:", book.hinhAnh);
               console.log(
@@ -159,14 +163,21 @@ const SearchPage = () => {
               return (
                 <div
                   key={book.maSach}
-                  className="flex flex-col p-6 bg-white rounded-xl shadow-md gap-4"
+                  className="flex flex-col p-6 bg-white rounded-xl shadow-lg gap-4"
                 >
+                  <div className="flex justify-end">
+                    <div className="flex justify-items-right bg-amber-100 rounded-full shadow-md w-fit px-4 py-2">
+                      <p className="flex items-center gap-2 text-s font-semibold">
+                        {icon} {label}
+                      </p>
+                    </div>
+                  </div>
                   <Image
                     src={getImageSrc(book.hinhAnh)}
                     alt={book.tenSach || "Sách không rõ tiêu đề"}
                     width={160}
                     height={224}
-                    className="mx-auto rounded-lg shadow-lg object-cover"
+                    className="mx-auto rounded-lg h-[230px] shadow-lg object-contain"
                     placeholder="blur"
                     blurDataURL="/download.jpg"
                     onError={() =>
@@ -176,10 +187,12 @@ const SearchPage = () => {
                       )
                     }
                   />
-                  <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-blue-900">
-                      {book.tenSach || "Không rõ tiêu đề"}
-                    </h3>
+                  <div className="flex-1 ">
+                    <div className="flex mb-2 justify-items-center justify-center h-[55px]">
+                      <h3 className="text-xl text-center font-semibold text-blue-900 line-clamp-2">
+                        {book.tenSach || "Không rõ tiêu đề"}
+                      </h3>
+                    </div>
                     <p className="text-gray-700 font-semibold">
                       Tác giả: {book.tenTacGias?.join(", ") || "Không rõ"}
                     </p>
@@ -191,9 +204,7 @@ const SearchPage = () => {
                       <span className="font-semibold">NXB:</span>{" "}
                       {book.tenNXB || "Không rõ"}
                     </p>
-                    <p className="flex items-center gap-2 font-semibold">
-                      {icon} Trạng thái: {label}
-                    </p>
+
                     <p>
                       <span className="font-semibold">Giá:</span>{" "}
                       {book.gia || 0} đ
@@ -202,17 +213,19 @@ const SearchPage = () => {
                       <span className="font-semibold">Số lượng:</span>{" "}
                       {book.soLuong || 0}
                     </p>
-                    <Button
-                      disabled={!available}
-                      variant={available ? "default" : "secondary"}
-                      className={
-                        available
-                          ? "bg-[#062D76] hover:bg-[#E6EAF1] hover:text-[#062D76] text-white"
-                          : "bg-gray-300 text-gray-600"
-                      }
-                    >
-                      Mượn sách
-                    </Button>
+                    <div className="flex justify-end mt-0">
+                      <Button
+                        disabled={!available}
+                        variant={available ? "default" : "secondary"}
+                        className={
+                          available
+                            ? "bg-blue-300 hover:bg-blue-400 hover:text-[#062D76] text-white"
+                            : "bg-gray-300 text-gray-600"
+                        }
+                      >
+                        Mượn sách
+                      </Button>
+                    </div>
                   </div>
                 </div>
               );

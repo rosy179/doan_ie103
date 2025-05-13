@@ -13,7 +13,7 @@ const nextConfig = {
         protocol: "http",
         hostname: "localhost",
         port: "8080",
-        pathname: "/api/image-proxy/**",
+        pathname: "/api/books/image-proxy/**",
       },
     ], // Cho Next.js 14 trở lên
   },
