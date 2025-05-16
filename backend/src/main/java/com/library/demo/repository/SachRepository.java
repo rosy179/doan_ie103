@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.library.demo.model.Sach;
 
+
 public interface SachRepository extends JpaRepository<Sach, Integer> {
     @Query("SELECT s FROM Sach s " +
            "JOIN s.theLoais tl " +
@@ -19,4 +20,6 @@ public interface SachRepository extends JpaRepository<Sach, Integer> {
            "LOWER(tg.tenTG) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "LOWER(nxb.tenNXB) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     Page<Sach> searchBooks(@Param("keyword") String keyword, Pageable pageable);
+    Sach findBymaSach(Integer maSach);
+    Sach deleteBymaSach(Integer maSach);
 }

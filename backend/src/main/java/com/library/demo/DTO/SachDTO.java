@@ -30,7 +30,7 @@ public class SachDTO {
     public void setTenNXB(String tenNXB) { this.tenNXB = tenNXB; }
     public String getTinhTrang() { return tinhTrang; }
     public void setTinhTrang(String tinhTrang) { this.tinhTrang = tinhTrang; }
-    public double getGia() { return gia; }
+    public Integer getGia() { return gia; }
     public void setGia(Integer gia) { this.gia = gia; }
     public int getSoLuong() { return soLuong; }
     public void setSoLuong(int soLuong) { this.soLuong = soLuong; }

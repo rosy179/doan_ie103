@@ -148,8 +148,8 @@ const SearchPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {books.map((book) => {
               const { label, icon, available } = statusMap[book.tinhTrang] || {
-                label: "Còn sẵn",
-                icon: <CheckCircle className="text-green-500" />,
+                label: "Chưa rõ",
+                icon: <XCircle className="text-green-500" />,
                 available: true,
               };
               console.log("Book image:", book.hinhAnh);
